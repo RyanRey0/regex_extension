@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Regex Extractor",
+  "version": "1.0.0",
+  "description": "Extrae texto de PDFs y aplica patrones regex por categoría de documento.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PDF Regex Extractor"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["lib/pdf.worker.min.mjs"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

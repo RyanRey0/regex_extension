@@ -1,0 +1,17 @@
+{
+  "name": "pdf-regex-extractor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./css/styles.css --minify",
+    "build:pdf": "node scripts/copy-pdfjs.js",
+    "build": "npm run build:css && npm run build:pdf",
+    "postinstall": "npm run build"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  }
+}
