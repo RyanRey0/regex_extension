@@ -1,3 +1,2 @@
+# solo excluir node_modules, los compilados se incluyen en el repo
 node_modules/
-lib/
-css/styles.css
