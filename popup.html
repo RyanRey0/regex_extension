@@ -52,14 +52,24 @@
         </section>
 
         <section class="space-y-2">
-          <button
-            id="btn-extract"
-            disabled
-            class="w-full bg-ink text-surface rounded py-2 text-xs font-medium
-                   hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Extraer texto
-          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              id="btn-extract"
+              disabled
+              class="bg-ink text-surface rounded py-2 text-xs font-medium
+                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Extraer texto
+            </button>
+            <button
+              id="btn-clear"
+              disabled
+              class="bg-ink text-surface rounded py-2 text-xs font-medium
+                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Limpiar
+            </button>
+          </div>
 
           <div class="grid grid-cols-2 gap-2">
             <button

@@ -2,12 +2,13 @@ import {
   regex_libraries,
   apply_regex_library,
   format_regex_results,
+  format_regex_results_yml,
 } from "./regex-libraries.js";
 import {
   extract_text_from_pdfs,
   format_all_text,
 } from "./pdf-handler.js";
-import { download_txt, build_export_name } from "./export.js";
+import { download_file, build_export_name } from "./export.js";
 
 const drop_zone = document.getElementById("drop-zone");
 const file_input = document.getElementById("file-input");
@@ -15,6 +16,7 @@ const file_list = document.getElementById("file-list");
 const library_select = document.getElementById("library-select");
 const library_desc = document.getElementById("library-desc");
 const btn_extract = document.getElementById("btn-extract");
+const btn_clear = document.getElementById("btn-clear");
 const btn_export_all = document.getElementById("btn-export-all");
 const btn_export_regex = document.getElementById("btn-export-regex");
 const status_bar = document.getElementById("status-bar");
@@ -31,6 +33,7 @@ function init() {
   setup_drop_zone();
   setup_buttons();
   update_ui_state();
+  load_saved_state(); // restaurar datos al iniciar
 }
 
 function populate_library_select() {
@@ -46,7 +49,9 @@ function populate_library_select() {
     library_desc.textContent = lib.description;
     if (extracted_data.length > 0) {
       run_regex_extraction();
+      show_preview();
     }
+    save_state_to_storage(); // guardar cambios en seleccion
   });
 
   library_desc.textContent = regex_libraries[library_select.value].description;
@@ -82,7 +87,7 @@ function setup_drop_zone() {
 function add_files(files) {
   for (const file of files) {
     const exists = selected_files.some(
-      (f) => f.name === file.name && f.size === file.size
+      (f) => (f.name || f.fileName) === file.name && f.size === file.size
     );
     if (!exists) {
       selected_files.push(file);
@@ -91,6 +96,7 @@ function add_files(files) {
   render_file_list();
   update_ui_state();
   set_status(`${selected_files.length} archivo(s) listo(s)`);
+  save_state_to_storage(); // guardar lista de archivos actualizada
 }
 
 function render_file_list() {
@@ -108,9 +114,10 @@ function render_file_list() {
     row.className =
       "flex items-center justify-between bg-surface border border-muted rounded px-2 py-1 text-xs";
 
-    const size_kb = (file.size / 1024).toFixed(1);
+    const display_name = file.name || file.fileName;
+    const size_kb = file.size ? (file.size / 1024).toFixed(1) : "?.?";
     row.innerHTML = `
-      <span class="truncate flex-1 mr-2" title="${file.name}">${file.name}</span>
+      <span class="truncate flex-1 mr-2" title="${display_name}">${display_name}</span>
       <span class="text-gray-400 mr-3">${size_kb} KB</span>
     `;
 
@@ -120,12 +127,25 @@ function render_file_list() {
     btn_remove.textContent = "×";
     btn_remove.title = "Quitar archivo";
     btn_remove.addEventListener("click", () => {
+      const removed_name = selected_files[i].name || selected_files[i].fileName;
       selected_files.splice(i, 1);
-      extracted_data = [];
-      regex_results = [];
+      
+      // Quitar solo los datos de ese archivo de la extraccion
+      extracted_data = extracted_data.filter((d) => d.fileName !== removed_name);
+      
+      if (extracted_data.length > 0) {
+        run_regex_extraction();
+        show_preview();
+        set_status(`Listo: ${extracted_data.length} PDF(s), ${total_pages()} página(s)`);
+      } else {
+        regex_results = [];
+        preview_area.textContent = "";
+        set_status(selected_files.length > 0 ? `${selected_files.length} archivo(s) listo(s)` : "Selecciona PDFs");
+      }
+      
       render_file_list();
       update_ui_state();
-      preview_area.textContent = "";
+      save_state_to_storage(); // guardar estado tras borrar archivo
     });
 
     row.appendChild(btn_remove);
@@ -137,6 +157,7 @@ function setup_buttons() {
   btn_extract.addEventListener("click", handle_extract);
   btn_export_all.addEventListener("click", handle_export_all);
   btn_export_regex.addEventListener("click", handle_export_regex);
+  btn_clear.addEventListener("click", handle_clear); // conectar boton de limpiar
 }
 
 async function handle_extract() {
@@ -166,6 +187,7 @@ async function handle_extract() {
     btn_extract.disabled = false;
     btn_extract.textContent = "Extraer texto";
     update_ui_state();
+    save_state_to_storage(); // guardar estado final tras extraer
   }
 }
 
@@ -188,8 +210,8 @@ function show_preview() {
     preview_lines.push("");
   }
 
-  preview_lines.push("--- Coincidencias Regex ---");
-  preview_lines.push(format_regex_results(regex_results, library_key));
+  preview_lines.push("--- Coincidencias Regex (YML) ---");
+  preview_lines.push(format_regex_results_yml(regex_results, library_key));
 
   preview_area.textContent = preview_lines.join("\n");
 }
@@ -197,7 +219,7 @@ function show_preview() {
 function handle_export_all() {
   if (extracted_data.length === 0) return;
   const content = format_all_text(extracted_data);
-  download_txt(content, build_export_name("texto_completo"));
+  download_file(content, build_export_name("texto_completo", ".txt"));
   set_status("Texto completo exportado");
 }
 
@@ -205,9 +227,13 @@ function handle_export_regex() {
   if (extracted_data.length === 0) return;
   const library_key = library_select.value;
   const lib = regex_libraries[library_key];
-  const content = format_regex_results(regex_results, library_key);
-  download_txt(content, build_export_name(`regex_${lib.label.toLowerCase().replace(/\s+/g, "_")}`));
-  set_status("Datos regex exportados");
+  const content = format_regex_results_yml(regex_results, library_key);
+  download_file(
+    content,
+    build_export_name(`regex_${lib.label.toLowerCase().replace(/\s+/g, "_")}`, ".yml"),
+    "application/x-yaml;charset=utf-8"
+  );
+  set_status("Datos regex exportados en YML");
 }
 
 function total_pages() {
@@ -219,6 +245,7 @@ function update_ui_state() {
   const has_data = extracted_data.length > 0;
 
   btn_extract.disabled = !has_files;
+  btn_clear.disabled = !has_files; // habilitar limpiar si hay archivos listados
   btn_export_all.disabled = !has_data;
   btn_export_regex.disabled = !has_data;
 }
@@ -228,4 +255,72 @@ function set_status(message, is_error = false) {
   status_bar.className = is_error
     ? "text-xs text-ink italic font-medium"
     : "text-xs text-muted italic";
+}
+
+// guardar estado en almacenamiento local de Chrome
+function save_state_to_storage() {
+  const serialized_files = selected_files.map((f) => ({
+    name: f.name || f.fileName,
+    size: f.size || 0,
+  }));
+
+  chrome.storage.local.set({
+    selected_files: serialized_files,
+    extracted_data,
+    regex_results,
+    library_key: library_select.value,
+    status_message: status_bar.textContent,
+    is_error: status_bar.classList.contains("font-medium"),
+  });
+}
+
+// restaurar estado guardado al abrir popup
+function load_saved_state() {
+  chrome.storage.local.get(
+    ["selected_files", "extracted_data", "regex_results", "library_key", "status_message", "is_error"],
+    (result) => {
+      if (result.selected_files) {
+        selected_files = result.selected_files;
+      }
+      if (result.extracted_data) {
+        extracted_data = result.extracted_data;
+      }
+      if (result.regex_results) {
+        regex_results = result.regex_results;
+      }
+      if (result.library_key) {
+        library_select.value = result.library_key;
+        const lib = regex_libraries[library_select.value];
+        if (lib) {
+          library_desc.textContent = lib.description;
+        }
+      }
+
+      // actualizar UI con datos cargados
+      if (selected_files.length > 0) {
+        render_file_list();
+      }
+      if (result.status_message) {
+        set_status(result.status_message, result.is_error || false);
+      }
+      if (extracted_data.length > 0) {
+        show_preview();
+      }
+      update_ui_state();
+    }
+  );
+}
+
+// limpiar todo el estado y almacenamiento
+function handle_clear() {
+  selected_files = [];
+  extracted_data = [];
+  regex_results = [];
+
+  render_file_list();
+  preview_area.textContent = "";
+  set_status("Selecciona PDFs");
+  update_ui_state();
+
+  chrome.storage.local.clear();
 }

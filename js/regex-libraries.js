@@ -28,26 +28,48 @@ export function apply_regex_library(text, library_key) {
   const library = get_library(library_key);
   const results = [];
 
+  // Recorrer cada patron de la libreria
   for (const pattern of library.patterns) {
     const matches = [];
+    const normalized_matches = []; // para evitar duplicados normalizados
     const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
     let match;
 
+    // Buscar todas las coincidencias
     while ((match = regex.exec(text)) !== null) {
-      const value = match[1] !== undefined ? match[1].trim() : match[0].trim();
-      if (value && !matches.includes(value)) {
-        matches.push(value);
+      let value = "";
+      // Recorrer los grupos de captura para encontrar el primero definido
+      for (let i = 1; i < match.length; i++) {
+        if (match[i] !== undefined) {
+          value = match[i].trim();
+          break;
+        }
+      }
+      if (!value && match[0] !== undefined) {
+        value = match[0].trim();
+      }
+      if (value) {
+        // Normalizar espacios internos del valor
+        const clean_value = value.replace(/\s+/g, " ");
+        // Normalizar texto para la comparacion
+        const norm = clean_value.toLowerCase();
+        // Si parece un numero decimal con comas, quitar comas
+        const normalized_value = /^\d{1,3}(?:,\d{3})*\.\d{2}$/.test(norm) ? norm.replace(/,/g, "") : norm;
+        
+        if (!normalized_matches.includes(normalized_value)) {
+          normalized_matches.push(normalized_value);
+          matches.push(clean_value);
+        }
       }
     }
 
-    if (matches.length > 0) {
-      results.push({
-        pattern_id: pattern.id,
-        label: pattern.label,
-        variable: pattern.variable,
-        matches,
-      });
-    }
+    // Agregar resultado siempre para mantener la estructura limpia
+    results.push({
+      pattern_id: pattern.id,
+      label: pattern.label,
+      variable: pattern.variable,
+      matches,
+    });
   }
 
   return results;
@@ -67,12 +89,41 @@ export function format_regex_results(results, library_key) {
     return lines.join("\n");
   }
 
+  // Listar coincidencias por grupo
   for (const group of results) {
     lines.push(`--- ${group.label} (${group.variable}) ---`);
     for (const match of group.matches) {
       lines.push(`  • ${match}`);
     }
     lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+export function format_regex_results_yml(results, library_key) {
+  const library = get_library(library_key);
+  const lines = [
+    `libreria: "${library.label}"`,
+    `categoria: "${library.category}"`,
+    `proveedor: "${library.provider}"`,
+    `tipo_documento: "${library.document_type}"`,
+    `fecha: "${new Date().toISOString()}"`,
+    `coincidencias:`,
+  ];
+
+  // Formatear cada grupo en estructura YML
+  for (const group of results) {
+    if (group.matches.length === 0) {
+      lines.push(`  ${group.variable}: []`);
+    } else {
+      lines.push(`  ${group.variable}:`);
+      for (const match of group.matches) {
+        // Limpiar comillas para no romper el formato
+        const escaped = match.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+        lines.push(`    - "${escaped}"`);
+      }
+    }
   }
 
   return lines.join("\n");
