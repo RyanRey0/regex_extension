@@ -3,6 +3,7 @@ import {
   apply_regex_library,
   format_regex_results,
   format_regex_results_yml,
+  format_preview_yml,
 } from "./regex-libraries.js";
 import {
   extract_text_from_pdfs,
@@ -21,6 +22,7 @@ const btn_export_all = document.getElementById("btn-export-all");
 const btn_export_regex = document.getElementById("btn-export-regex");
 const status_bar = document.getElementById("status-bar");
 const preview_area = document.getElementById("preview-area");
+const btn_copy = document.getElementById("btn-copy");
 
 let selected_files = [];
 let extracted_data = [];
@@ -67,16 +69,16 @@ function setup_drop_zone() {
 
   drop_zone.addEventListener("dragover", (e) => {
     e.preventDefault();
-    drop_zone.classList.add("border-primary");
+    drop_zone.classList.add("dropzone-active");
   });
 
   drop_zone.addEventListener("dragleave", () => {
-    drop_zone.classList.remove("border-primary");
+    drop_zone.classList.remove("dropzone-active");
   });
 
   drop_zone.addEventListener("drop", (e) => {
     e.preventDefault();
-    drop_zone.classList.remove("border-primary");
+    drop_zone.classList.remove("dropzone-active");
     const pdf_files = Array.from(e.dataTransfer.files).filter(
       (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
     );
@@ -104,7 +106,7 @@ function render_file_list() {
 
   if (selected_files.length === 0) {
     file_list.innerHTML =
-      '<p class="text-xs text-muted italic">Sin archivos</p>';
+      '<p class="text-label-md text-outline italic">Sin archivos seleccionados</p>';
     return;
   }
 
@@ -158,13 +160,31 @@ function setup_buttons() {
   btn_export_all.addEventListener("click", handle_export_all);
   btn_export_regex.addEventListener("click", handle_export_regex);
   btn_clear.addEventListener("click", handle_clear); // conectar boton de limpiar
+  
+  if (btn_copy) {
+    btn_copy.addEventListener("click", () => {
+      navigator.clipboard.writeText(preview_area.textContent);
+      const original_text = btn_copy.innerHTML;
+      btn_copy.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 16px;">check</span>
+        COPIADO
+      `;
+      setTimeout(() => {
+        btn_copy.innerHTML = original_text;
+      }, 2000);
+    });
+  }
 }
 
 async function handle_extract() {
   if (selected_files.length === 0) return;
 
   btn_extract.disabled = true;
-  btn_extract.textContent = "Extrayendo...";
+  // Cambiar titulo a ejecutando
+  btn_extract.title = "Ejecutando...";
+  btn_extract.innerHTML = `
+    <span class="material-symbols-outlined animate-spin">sync</span>
+  `;
   set_status("Procesando PDFs...");
 
   try {
@@ -185,7 +205,11 @@ async function handle_extract() {
     console.error(err);
   } finally {
     btn_extract.disabled = false;
-    btn_extract.textContent = "Extraer texto";
+    // Restaurar titulo a ejecutar
+    btn_extract.title = "Ejecutar";
+    btn_extract.innerHTML = `
+      <span class="material-symbols-outlined font-bold" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+    `;
     update_ui_state();
     save_state_to_storage(); // guardar estado final tras extraer
   }
@@ -210,8 +234,8 @@ function show_preview() {
     preview_lines.push("");
   }
 
-  preview_lines.push("--- Coincidencias Regex (YML) ---");
-  preview_lines.push(format_regex_results_yml(regex_results, library_key));
+  preview_lines.push("--- Coincidencias Regex ---");
+  preview_lines.push(format_preview_yml(regex_results));
 
   preview_area.textContent = preview_lines.join("\n");
 }
@@ -219,18 +243,17 @@ function show_preview() {
 function handle_export_all() {
   if (extracted_data.length === 0) return;
   const content = format_all_text(extracted_data);
-  download_file(content, build_export_name("texto_completo", ".txt"));
+  download_file(content, build_export_name("texto", ".txt"));
   set_status("Texto completo exportado");
 }
 
 function handle_export_regex() {
   if (extracted_data.length === 0) return;
   const library_key = library_select.value;
-  const lib = regex_libraries[library_key];
   const content = format_regex_results_yml(regex_results, library_key);
   download_file(
     content,
-    build_export_name(`regex_${lib.label.toLowerCase().replace(/\s+/g, "_")}`, ".yml"),
+    build_export_name(`regex_${library_key}`, ".yml"),
     "application/x-yaml;charset=utf-8"
   );
   set_status("Datos regex exportados en YML");

@@ -25,7 +25,7 @@ export const library = {
       label: "Factura",
       variable: "factura",
       // Expresión para buscar el número de factura
-      regex: /(?:factura|nro\.?\s*fact|f\.?\s*n[°º]?|electr[oó]nica)\s*[:\-]?\s*([A-Z0-9]+-\s*\d+)/gi,
+      regex: /(?:nro\.?\s*|factura\s*(?:electr[oó]nica)?\s*)\s*([A-Z]\d{3}-\s*\d+)/gi,
       result: "Número de factura electrónica",
     },
     {

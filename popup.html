@@ -1,115 +1,465 @@
 <!DOCTYPE html>
-<html lang="es">
+<html class="light" lang="es">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PDF Regex Extractor</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Regex Extractor | Gallagher</title>
+    <!-- Tailwind CSS local -->
     <link rel="stylesheet" href="css/styles.css" />
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap" rel="stylesheet">
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+    <style>
+      /* Fuentes y diseño base */
+      body {
+        font-family: 'Inter', sans-serif;
+        width: 380px;
+        height: 600px;
+        overflow-x: hidden;
+        margin: 0;
+        background-color: #fbf9f8;
+      }
+      
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      /* Zona de arrastre activa */
+      .dropzone-active {
+        border-color: #000000 !important;
+        background-color: #e2eef9 !important;
+      }
+
+      /* Barra de desplazamiento personalizada */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f5f3f3;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #a6cbeb;
+        border-radius: 2px;
+      }
+
+      /* Utilidades de espaciado personalizadas */
+      .space-y-section-margin > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 20px;
+      }
+      .space-y-stack-gap > :not([hidden]) ~ :not([hidden]) {
+        margin-top: 12px;
+      }
+      .pb-16 {
+        padding-bottom: 4rem;
+      }
+
+      /* Clases de tema personalizadas para coincidir con Tailwind config */
+      .bg-surface-container-low\/50 {
+        background-color: rgba(245, 243, 243, 0.5);
+      }
+      .bg-surface-container-low {
+        background-color: #f5f3f3;
+      }
+      .border-gallagher-blue\/30 {
+        border-color: rgba(166, 203, 235, 0.3);
+      }
+      .border-gallagher-blue\/40 {
+        border-color: rgba(166, 203, 235, 0.4);
+      }
+      .border-gallagher-blue\/50 {
+        border-color: rgba(166, 203, 235, 0.5);
+      }
+      .bg-secondary-container\/20 {
+        background-color: rgba(203, 230, 255, 0.2);
+      }
+      .bg-secondary-container\/30 {
+        background-color: rgba(203, 230, 255, 0.3);
+      }
+      .border-surface-variant {
+        border-color: #e4e2e2;
+      }
+      .border-outline-variant {
+        border-color: #cfc4c5;
+      }
+      .bg-gallagher-blue {
+        background-color: #a6cbeb;
+      }
+      
+      /* Tipografía y tamaños */
+      .text-label-lg {
+        font-size: 14px;
+        line-height: 20px;
+        letter-spacing: 0.02em;
+        font-weight: 600;
+      }
+      .text-label-md {
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+      }
+      .text-body-sm {
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 400;
+      }
+      .text-mono-sm {
+        font-size: 12px;
+        line-height: 18px;
+        font-weight: 400;
+      }
+      .font-mono-sm {
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      /* Tamaños de elementos interactivos */
+      .w-touch-target {
+        width: 32px;
+      }
+      .h-touch-target {
+        height: 32px;
+      }
+      .px-container-padding {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      /* Animación de la lista de archivos */
+      #file-list div {
+        background-color: #f5f3f3 !important;
+        border-color: #cfc4c5 !important;
+        color: #1b1c1c !important;
+        padding: 6px 10px !important;
+        border-radius: 4px !important;
+        animation: slideIn 0.2s ease-out forwards;
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Clases utilitarias de Flexbox y Layout */
+      .flex {
+        display: flex;
+      }
+      .flex-col {
+        flex-direction: column;
+      }
+      .flex-1 {
+        flex: 1 1 0%;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .justify-center {
+        justify-content: center;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .gap-1 {
+        gap: 0.25rem;
+      }
+      .gap-2 {
+        gap: 0.5rem;
+      }
+      .gap-4 {
+        gap: 1rem;
+      }
+      .relative {
+        position: relative;
+      }
+      .absolute {
+        position: absolute;
+      }
+      .inset-y-0 {
+        top: 0;
+        bottom: 0;
+      }
+      .right-0 {
+        right: 0;
+      }
+      .pr-2 {
+        padding-right: 0.5rem;
+      }
+      .pointer-events-none {
+        pointer-events: none;
+      }
+      
+      /* Clases de Layout base */
+      .w-full {
+        width: 100%;
+      }
+      .h-full {
+        height: 100%;
+      }
+      .h-12 {
+        height: 3rem;
+      }
+      .sticky {
+        position: sticky;
+      }
+      .top-0 {
+        top: 0;
+      }
+      .z-50 {
+        z-index: 50;
+      }
+      .border-b {
+        border-bottom-width: 1px;
+      }
+      .border-2 {
+        border-width: 2px;
+      }
+      .border-dashed {
+        border-style: dashed;
+      }
+      .rounded-lg {
+        border-radius: 0.5rem;
+      }
+      .rounded-full {
+        border-radius: 9999px;
+      }
+      .p-6 {
+        padding: 1.5rem;
+      }
+      .p-4 {
+        padding: 1rem;
+      }
+      .px-1 {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+      }
+      .px-3 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      .px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      .py-4 {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+      }
+      .mb-2 {
+        margin-bottom: 0.5rem;
+      }
+      .text-center {
+        text-align: center;
+      }
+      
+      /* Apariencia de entrada/select */
+      .appearance-none {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+      }
+      .outline-none {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+      }
+      
+      /* Formateo de texto */
+      .font-bold {
+        font-weight: 700;
+      }
+      .font-medium {
+        font-weight: 500;
+      }
+      .uppercase {
+        text-transform: uppercase;
+      }
+      .italic {
+        font-style: italic;
+      }
+      .tracking-tight {
+        letter-spacing: -0.025em;
+      }
+      .tracking-wide {
+        letter-spacing: 0.025em;
+      }
+      .leading-relaxed {
+        line-height: 1.625;
+      }
+      
+      /* Desenfoque y sombras */
+      .backdrop-blur-sm {
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+      .shadow-sm {
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      }
+      
+      /* Transiciones e Interacciones */
+      .transition-all {
+        transition-property: all;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+      }
+      .transition-colors {
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+      }
+      .duration-200 {
+        transition-duration: 200ms;
+      }
+      .cursor-pointer {
+        cursor: pointer;
+      }
+      
+      .hover\:border-primary:hover {
+        border-color: #000000 !important;
+      }
+      .hover\:bg-secondary-container\/20:hover {
+        background-color: rgba(203, 230, 255, 0.2) !important;
+      }
+      .hover\:text-primary:hover {
+        color: #000000 !important;
+      }
+      .group:hover .group-hover\:text-primary {
+        color: #000000 !important;
+      }
+      .hover\:bg-error-container:hover {
+        background-color: #ffdad6 !important;
+      }
+      .hover\:text-error:hover {
+        color: #ba1a1a !important;
+      }
+      .hover\:bg-gallagher-blue\/40:hover {
+        background-color: rgba(166, 203, 235, 0.4) !important;
+      }
+      .active\:scale-\[0\.95\]:active {
+        transform: scale(0.95);
+      }
+      
+      /* Estados deshabilitados */
+      .disabled\:opacity-30:disabled {
+        opacity: 0.3 !important;
+      }
+      .disabled\:scale-100:disabled {
+        transform: scale(1) !important;
+      }
+      .disabled\:cursor-not-allowed:disabled {
+        cursor: not-allowed !important;
+      }
+
+      /* Colores del tema */
+      .text-primary {
+        color: #000000;
+      }
+      .text-secondary {
+        color: #3d627e;
+      }
+      .text-outline {
+        color: #7e7576;
+      }
+      .text-on-surface {
+        color: #1b1c1c;
+      }
+      .text-on-surface-variant {
+        color: #4c4546;
+      }
+      .text-on-surface-variant\/80 {
+        color: rgba(76, 69, 70, 0.8);
+      }
+      .bg-white {
+        background-color: #ffffff;
+      }
+    </style>
   </head>
-  <body class="bg-surface text-ink font-sans antialiased">
-    <div class="w-[400px] min-h-[480px] flex flex-col">
-      <!-- header minimalista -->
-      <header class="bg-ink text-surface px-4 py-2">
-        <h1 class="text-sm font-semibold tracking-tight">Regex Extractor</h1>
-      </header>
+  <body class="text-on-surface flex flex-col h-full justify-between">
+    <!-- Top Navigation Bar -->
+    <header class="bg-white flex items-center justify-between w-full px-container-padding py-2 h-12 sticky top-0 z-50 border-b border-surface-variant">
+      <div class="flex items-center gap-2">
+        <h1 class="text-label-lg font-bold text-primary tracking-tight">Regex Extractor</h1>
+      </div>
+    </header>
 
-      <!-- contenido -->
-      <main class="flex-1 px-4 py-3 space-y-3 overflow-y-auto bg-surface">
-        <section>
-          <label class="block text-xs font-medium text-primary mb-1">
-            Documentos PDF
-          </label>
-          <div
-            id="drop-zone"
-            class="border border-dashed border-muted rounded-lg p-4 text-center cursor-pointer
-                   bg-surface hover:border-primary transition-colors"
-          >
-            <p class="text-xs text-ink">Arrastra o selecciona PDFs</p>
-            <input
-              id="file-input"
-              type="file"
-              accept=".pdf,application/pdf"
-              multiple
-              class="hidden"
-            />
+    <main class="flex-1 px-container-padding py-4 space-y-section-margin overflow-y-auto">
+      <!-- PDF Section -->
+      <section class="space-y-stack-gap">
+        <h2 class="text-label-md text-primary tracking-wide uppercase">Documentos PDF</h2>
+        <div class="border-2 border-dashed border-gallagher-blue/50 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all duration-200 hover:border-primary hover:bg-secondary-container/20 cursor-pointer group bg-surface-container-low/50" id="drop-zone">
+          <span class="material-symbols-outlined text-secondary group-hover:text-primary mb-2 transition-colors" style="font-size: 32px;">upload_file</span>
+          <p class="text-body-sm text-on-surface-variant font-medium">Arrastra o selecciona PDFs</p>
+          <input accept=".pdf,application/pdf" class="hidden" multiple="" type="file" id="file-input">
+        </div>
+        <div id="file-list" class="space-y-1 max-h-24 overflow-y-auto">
+          <p class="text-label-md text-outline italic">Sin archivos seleccionados</p>
+        </div>
+      </section>
+
+      <!-- Regex Selection -->
+      <section class="space-y-stack-gap">
+        <div class="flex items-center justify-between">
+          <h2 class="text-label-md text-primary tracking-wide uppercase">Librería Regex</h2>
+        </div>
+        <div class="relative">
+          <select id="library-select" class="w-full bg-surface-container-low border border-outline-variant rounded px-3 py-2 text-body-sm appearance-none focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none">
+            <!-- populated by app.js -->
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+            <span class="material-symbols-outlined text-on-surface-variant" style="font-size: 20px;">expand_more</span>
           </div>
-        </section>
+        </div>
+        <p id="library-desc" class="text-body-sm text-on-surface-variant/80 px-1"></p>
+      </section>
 
-        <section id="file-list" class="space-y-1 max-h-24 overflow-y-auto">
-          <p class="text-xs text-muted italic">Sin archivos</p>
-        </section>
+      <!-- Action Bar -->
+      <div class="flex justify-center items-center bg-secondary-container/30 rounded-full px-4 py-2 gap-4 border border-gallagher-blue/40 backdrop-blur-sm">
+        <!-- Procesar -->
+        <button id="btn-extract" disabled class="group flex items-center justify-center w-touch-target h-touch-target rounded-full bg-gallagher-blue text-primary transition-all duration-200 hover:brightness-95 active:scale-[0.95] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-sm" title="Ejecutar">
+          <span class="material-symbols-outlined font-bold" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+        </button>
+        <!-- Limpiar -->
+        <button id="btn-clear" disabled class="group flex items-center justify-center w-touch-target h-touch-target rounded-full hover:bg-error-container text-on-surface-variant hover:text-error transition-all duration-200 active:scale-[0.95] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed" title="Eliminar">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+        <!-- Exportar texto -->
+        <button id="btn-export-all" disabled class="group flex items-center justify-center w-touch-target h-touch-target rounded-full hover:bg-gallagher-blue/40 text-on-surface-variant hover:text-primary transition-all duration-200 active:scale-[0.95] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed" title="Ver Documento">
+          <span class="material-symbols-outlined">description</span>
+        </button>
+        <!-- Exportar regex -->
+        <button id="btn-export-regex" disabled class="group flex items-center justify-center w-touch-target h-touch-target rounded-full hover:bg-gallagher-blue/40 text-on-surface-variant hover:text-primary transition-all duration-200 active:scale-[0.95] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed" title="Configuración Regex">
+          <span class="material-symbols-outlined">code</span>
+        </button>
+      </div>
 
-        <section>
-          <label for="library-select" class="block text-xs font-medium text-primary mb-1">
-            Librería Regex
-          </label>
-          <select
-            id="library-select"
-            class="w-full border border-muted rounded px-2 py-1.5 text-xs
-                   bg-surface text-ink focus:outline-none focus:ring-1 focus:ring-primary"
-          ></select>
-          <p id="library-desc" class="text-xs text-muted mt-0.5"></p>
-        </section>
+      <!-- Preview Area -->
+      <section class="space-y-stack-gap pb-16">
+        <div class="flex items-center justify-between">
+          <h2 class="text-label-md text-primary tracking-wide uppercase">Vista previa</h2>
+          <button id="btn-copy" class="text-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
+            <span class="material-symbols-outlined" style="font-size: 16px;">content_copy</span>
+            COPIAR
+          </button>
+        </div>
+        <div class="bg-surface-container-low/50 border border-gallagher-blue/30 rounded p-4 min-h-[140px] custom-scrollbar overflow-y-auto">
+          <pre id="preview-area" class="font-mono-sm text-mono-sm text-on-surface whitespace-pre-wrap leading-relaxed">Esperando ejecución...</pre>
+        </div>
+      </section>
+    </main>
 
-        <section class="space-y-2">
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              id="btn-extract"
-              disabled
-              class="bg-ink text-surface rounded py-2 text-xs font-medium
-                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Extraer texto
-            </button>
-            <button
-              id="btn-clear"
-              disabled
-              class="bg-ink text-surface rounded py-2 text-xs font-medium
-                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Limpiar
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              id="btn-export-all"
-              disabled
-              class="bg-ink text-surface rounded py-2 text-xs font-medium
-                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Exportar todo
-            </button>
-            <button
-              id="btn-export-regex"
-              disabled
-              class="bg-ink text-surface rounded py-2 text-xs font-medium
-                     hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Exportar regex
-            </button>
-          </div>
-        </section>
-
-        <section>
-          <label class="block text-xs font-medium text-primary mb-1">
-            Vista previa
-          </label>
-          <pre
-            id="preview-area"
-            class="bg-surface border border-muted rounded p-2 text-xs text-ink
-                   h-32 overflow-y-auto whitespace-pre-wrap font-mono"
-          ></pre>
-        </section>
-      </main>
-
-      <!-- footer minimalista -->
-      <footer class="px-4 py-1.5 border-t border-muted bg-surface">
-        <p id="status-bar" class="text-xs text-muted italic">
-          Selecciona PDFs
-        </p>
-      </footer>
-    </div>
+    <!-- Footer Status -->
+    <footer class="px-container-padding py-1.5 border-t border-surface-variant bg-white flex items-center justify-between">
+      <p id="status-bar" class="text-label-md text-outline italic">Selecciona PDFs</p>
+    </footer>
 
     <script type="module" src="js/app.js"></script>
   </body>

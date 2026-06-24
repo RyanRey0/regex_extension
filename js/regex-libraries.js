@@ -50,13 +50,18 @@ export function apply_regex_library(text, library_key) {
       }
       if (value) {
         // Normalizar espacios internos del valor
-        const clean_value = value.replace(/\s+/g, " ");
-        // Normalizar texto para la comparacion
-        const norm = clean_value.toLowerCase();
+        let clean_value = value.replace(/\s+/g, " ");
+        if (clean_value === "VidaLeyDigital") {
+          clean_value = "Vida Ley Digital";
+        }
+        // Normalizar texto para la comparacion (quitar tildes y a minúsculas)
+        const norm = clean_value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         // Si parece un numero decimal con comas, quitar comas
         const normalized_value = /^\d{1,3}(?:,\d{3})*\.\d{2}$/.test(norm) ? norm.replace(/,/g, "") : norm;
         
-        if (!normalized_matches.includes(normalized_value)) {
+        // Permitir duplicados si es prima_total (para evitar simplificación incorrecta)
+        const is_deduplicable = pattern.variable !== "prima_total";
+        if (!is_deduplicable || !normalized_matches.includes(normalized_value)) {
           normalized_matches.push(normalized_value);
           matches.push(clean_value);
         }
@@ -105,26 +110,36 @@ export function format_regex_results_yml(results, library_key) {
   const library = get_library(library_key);
   const lines = [
     `libreria: "${library.label}"`,
-    `categoria: "${library.category}"`,
-    `proveedor: "${library.provider}"`,
-    `tipo_documento: "${library.document_type}"`,
-    `fecha: "${new Date().toISOString()}"`,
     `coincidencias:`,
   ];
 
-  // Formatear cada grupo en estructura YML
   for (const group of results) {
     if (group.matches.length === 0) {
       lines.push(`  ${group.variable}: []`);
     } else {
       lines.push(`  ${group.variable}:`);
       for (const match of group.matches) {
-        // Limpiar comillas para no romper el formato
         const escaped = match.replace(/"/g, '\\"').replace(/\n/g, '\\n');
         lines.push(`    - "${escaped}"`);
       }
     }
   }
 
+  return lines.join("\n");
+}
+
+export function format_preview_yml(results) {
+  const lines = [];
+  for (const group of results) {
+    if (group.matches.length === 0) {
+      lines.push(`  ${group.variable}: []`);
+    } else {
+      lines.push(`  ${group.variable}:`);
+      for (const match of group.matches) {
+        const escaped = match.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+        lines.push(`    - "${escaped}"`);
+      }
+    }
+  }
   return lines.join("\n");
 }

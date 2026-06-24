@@ -17,7 +17,7 @@ export const library = {
       label: "Proforma",
       variable: "proforma",
       // Expresión para buscar el número de proforma
-      regex: /(?:proforma)(?:\s*(?:nro|de|n[°º#\.])\s*)?[:\-]?\s*(\d+)/gi,
+      regex: /(?:proforma)(?:\s*(?:n[°º#\.]?|nro|número)?\s*[:\-]?\s*(\d+))/gi,
       result: "Número de proforma de cobertura",
     },
     {

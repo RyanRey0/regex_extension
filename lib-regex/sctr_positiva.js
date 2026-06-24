@@ -65,7 +65,7 @@ export const library = {
       label: "RUC",
       variable: "ruc",
       // Expresión para buscar RUC del cliente tras proforma o contratante
-      regex: /(?:proforma|contratante|cliente)(?:[\s\S]{1,200}?)R\.?U\.?C\.?(?:\s*:){1,2}\s*(\d{11})/gi,
+      regex: /n[uú]mero\s+de\s+proforma\s*[:：]?\s*\d+(?:[\s\S]{0,250}?)R\.?\s*U\.?\s*C\.?\s*[:：]?\s*[:：]?\s*(\d{11})/gi,
       result: "RUC del contratante (11 dígitos)",
     },
     {

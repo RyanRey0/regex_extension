@@ -4,15 +4,19 @@
 
 @layer base {
   :root {
-    --color-ink: #353535;
-    --color-primary: #3c6e71;
-    --color-surface: #ffffff;
-    --color-muted: #d9d9d9;
+    /* Color principal del texto */
+    --color-ink: #1b1c1c;
+    /* Color primario */
+    --color-primary: #000000;
+    /* Color de fondo */
+    --color-surface: #fbf9f8;
+    /* Color secundario/silenciado */
+    --color-muted: #7e7576;
   }
 
   body {
     color: var(--color-ink);
     background-color: var(--color-surface);
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 }

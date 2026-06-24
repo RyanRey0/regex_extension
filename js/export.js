@@ -27,6 +27,13 @@ export function download_file(contenido, nombre_archivo, tipo_mime = "text/plain
  * @param {string} extension
  */
 export function build_export_name(prefijo, extension = ".txt") {
-  const la_fecha = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-  return `${prefijo}_${la_fecha}${extension}`;
+  const ahora = new Date();
+  const yy = String(ahora.getFullYear()).slice(-2);
+  const mm = String(ahora.getMonth() + 1).padStart(2, "0");
+  const dd = String(ahora.getDate()).padStart(2, "0");
+  const hh = String(ahora.getHours()).padStart(2, "0");
+  const min = String(ahora.getMinutes()).padStart(2, "0");
+  const ss = String(ahora.getSeconds()).padStart(2, "0");
+  const fecha_formateada = `${yy}${mm}${dd}-${hh}${min}-${ss}`;
+  return `${prefijo}_${fecha_formateada}${extension}`;
 }
